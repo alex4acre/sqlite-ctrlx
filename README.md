@@ -1,6 +1,6 @@
 # README sqlite-ctrlx
 
-This python app __SQLite__ provides Data Layer nodes for interaction with an SQLite database.
+This python app __sqlite-ctrlx__ provides datalayer nodes on a bosch rexroth ctrlX core for interaction with an SQLite database residing on the core.
 
 ## Usage
 
