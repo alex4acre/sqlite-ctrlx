@@ -28,8 +28,6 @@ parts:
     source: .
     python-packages:
       - ./whl/ctrlx_datalayer-1.4.0-py3-none-any.whl
-      - ./whl/ctrlx_fbs-1.0.0-py3-none-any.whl
-      - flatbuffers~=1.12
 
 plugs:
   datalayer:
