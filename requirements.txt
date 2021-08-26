@@ -1,2 +1,1 @@
-flatbuffers~=1.12
 autopep8
