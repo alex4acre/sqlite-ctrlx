@@ -1,0 +1,27 @@
+            #db = ":memory:"#"file:memdb1?mode=memory&cache=shared" #in-memory database      
+            # db = os.environ.get("SNAP_COMMON") + "/temp.db"
+
+            #base = app.utils.initialize(db) #Leave one connection instance open to maintain memory
+            #base.execute("pragma journal_mode=wal;")       #Configure database in "write-ahead log" mode
+            #conn = sqlite3.connect('test.db')
+            #conn.execute("pragma journal_mode=wal;")
+            #cursor = conn.cursor()
+            #print("database connected")
+            #try: 
+                #conn.execute("INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) \
+                #        VALUES (7, 'Paul', 32, 'California', 20000.00 )");
+
+                #conn.execute("INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) \
+                #        VALUES (2, 'Allen', 25, 'Texas', 15000.00 )");
+
+                #conn.execute("INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) \
+                #        VALUES (3, 'Teddy', 23, 'Norway', 20000.00 )");
+
+                #conn.execute("INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) \
+                #        VALUES (4, 'Mark', 25, 'Rich-Mond ', 65000.00 )");
+
+                #conn.commit()
+            #history = conn.execute("INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) \
+            #            VALUES (5, 'Mike', 32, 'California', 20000.00)");
+            #history = conn.execute("select * FROM COMPANY")
+            #print(history.fetchmany(6))

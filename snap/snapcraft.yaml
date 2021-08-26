@@ -1,0 +1,34 @@
+name: sqlite-datalayer-provider
+version: 1.0.01
+summary: Simple SQLite database
+description: |
+  Writing a node will exectue the SQL statement on the SQLite database. Reading returns the result of the last succesful operation. 
+base: core18
+confinement: strict
+grade: stable
+
+apps:
+  provider:
+    command: main.py
+    plugs:
+      - network
+    daemon: simple
+    passthrough:   
+      restart-condition: always
+      restart-delay: 10s
+
+parts:
+  provider:
+    plugin: python
+    python-version: python3
+    source: .
+    python-packages:
+      - ./whl/ctrlx_datalayer-1.4.0-py3-none-any.whl
+      - ./whl/ctrlx_fbs-1.0.0-py3-none-any.whl
+      - flatbuffers~=1.12
+
+plugs:
+  datalayer:
+    interface: content
+    content: datalayer
+    target: $SNAP_DATA/.datalayer
