@@ -1,4 +1,4 @@
-# README datalayer.provider
+# README sqlite-ctrlx
 
 This python app __SQLite__ provides Data Layer nodes for interaction with an SQLite database.
 
