@@ -2,6 +2,7 @@ from distutils.core import setup
 
 setup(
       #name="sdk-py-datalayer-provider",
+      #name="sqlite-ctrlx",
       name="sqlite-ctrlx",
       version="1.0.01",
       description="Simple SQLite database",
