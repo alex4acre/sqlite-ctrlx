@@ -164,8 +164,8 @@ class SQLiteNode:
             singleStatements = completeScript.split(";")
             #if the last character is ";" then we will run the entire thing as script
             if completeScript[-1] == ";":
-                #queryresult = str(conn.executescript(completeScript).fetchmany(100))
-                queryresult = str(conn.executescript(completeScript).fetchall())
+                queryresult = str(conn.executescript(completeScript).fetchmany(2000))
+                #queryresult = str(conn.executescript(completeScript).fetchall())
                 conn.commit()
             #if the last character is not ; then run as a script except the last statement which will return a result    
             else:    
@@ -173,8 +173,8 @@ class SQLiteNode:
                 conn.executescript(completeScript[:-len(singleStatements[-1])])
                 #for i in singleStatements:
                 conn.commit()
-                #queryresult = str(conn.execute(singleStatements[-1]).fetchmany(100))
-                queryresult = str(conn.execute(singleStatements[-1]).fetchall())
+                queryresult = str(conn.execute(singleStatements[-1]).fetchmany(2000))
+                #queryresult = str(conn.execute(singleStatements[-1]).fetchall())
                 conn.commit()
             print(queryresult)
             _data.set_string(queryresult)
