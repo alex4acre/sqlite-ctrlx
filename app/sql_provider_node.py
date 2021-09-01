@@ -30,7 +30,7 @@ from datalayer.variant import Result, Variant, VariantType
 
 import sqlite3
 from sqlite3 import Error
-#import flatbuffers
+import flatbuffers
 from comm.datalayer import Metadata
 from comm.datalayer import AllowedOperations
 from comm.datalayer import Reference
