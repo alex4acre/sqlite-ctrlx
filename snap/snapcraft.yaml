@@ -34,3 +34,9 @@ plugs:
     interface: content
     content: datalayer
     target: $SNAP_DATA/.datalayer
+
+plugs:
+  active-solution:
+    interface: content
+    content: solutions
+    target: $SNAP_COMMON/solutions

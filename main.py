@@ -31,7 +31,7 @@ from sqlite3 import Error
 import datalayer
 from datalayer.variant import Variant
 
-from app.my_provider_node import SQLiteNode
+from app.sql_provider_node import SQLiteNode
 
 value_address_str_1 = "SQLite/terminal-1"
 value_address_str_2 = "SQLite/terminal-2"
