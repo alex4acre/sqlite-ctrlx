@@ -110,11 +110,8 @@ def provide_string(provider: datalayer.provider, name):
     print("Creating string  provider node")
     variantString = Variant()
     variantString.set_string("Enter SQL script here. Use ';' as the last character to suppress result")
-    provider_node_str = SQLiteNode(
-        provider, name, variantString)
-    provider_node_str.create_metadata()
+    provider_node_str = SQLiteNode(provider, name, variantString)
     provider_node_str.register_node()
-
     return provider_node_str
 
 
