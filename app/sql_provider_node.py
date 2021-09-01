@@ -88,7 +88,8 @@ class SQLiteNode:
         _data = data
         print(data.get_string())
         if 'SNAP' in os.environ:
-            conn = sqlite3.connect('/var/snap/rexroth-solutions/common/solutions/activeConfiguration/test.db')
+            #conn = sqlite3.connect('/var/snap/rexroth-solutions/common/solutions/activeConfiguration/test.db')
+            conn = sqlite3.connect('test.db')   
         else:
             conn = sqlite3.connect('test.db')   
         conn.execute("pragma journal_mode=wal;")
