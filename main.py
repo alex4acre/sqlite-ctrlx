@@ -27,7 +27,6 @@ from sqlite3.dbapi2 import Connection
 import time
 import sqlite3
 from sqlite3 import Error
-import flatbuffers
 
 import datalayer
 from datalayer.variant import Variant
