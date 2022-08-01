@@ -2,7 +2,7 @@
 
 # MIT License
 #
-# Copyright (c) 2021 Bosch Rexroth AG
+# Copyright (c) 2021-2022 Bosch Rexroth AG
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,100 +24,89 @@
 
 import os
 import sys
-from sqlite3.dbapi2 import Connection
 import time
-import sqlite3
-from sqlite3 import Error
 
 import ctrlxdatalayer
-from ctrlxdatalayer.variant import Variant
+from ctrlxdatalayer.variant import Variant, Result
 
 from helper.ctrlx_datalayer_helper import get_provider
 
-from app.sql_provider_node import SQLiteNode
-
-value_address_str_1 = "terminal-1"
-value_address_str_2 = "terminal-2"
-value_address_str_3 = "terminal-3"
-value_address_str_4 = "terminal-4"
+from app.my_provider_node import SQLiteNode
 
 # addresses of provided values
 address_base = "SQLite/"
 type_address_string = "types/datalayer/string"
 
+
 def main():
 
-     with ctrlxdatalayer.system.System("") as datalayer_system:
+    with ctrlxdatalayer.system.System("") as datalayer_system:
         datalayer_system.start(False)
 
-        # Try SSL port 8443
-        provider, connection_string = get_provider(datalayer_system)
+        # ip="10.0.2.2", ssl_port=8443: ctrlX virtual with port forwarding and default port mapping
+        provider, connection_string = get_provider(
+            datalayer_system, ip="10.0.2.2", ssl_port=8443)
         if provider is None:
             print("ERROR Connecting", connection_string, "failed.")
             sys.exit(1)
 
-        print("INFO Connecting", connection_string, "succeeded.")
+        with provider:  # provider.close() is called automatically when leaving with... block
 
-        with provider:  # provider.close() is called automatically when leaving with block
-
-            print("Starting provider")
             result = provider.start()
-            if result is not ctrlxdatalayer.variant.Result.OK:
+            if result != Result.OK:
                 print("ERROR Starting Data Layer Provider failed with:", result)
                 return
 
-            provider_node_str_1 = provide_string(provider, value_address_str_1)
-            provider_node_str_2 = provide_string(provider, value_address_str_2)
-            provider_node_str_3 = provide_string(provider, value_address_str_3)
-            provider_node_str_4 = provide_string(provider, value_address_str_4)
+            # Path to compiled files
+            snap_path = os.getenv('SNAP')
+            #if snap_path is None:
+            #    # Debug environment
+            #    bfbs_path = os.path.join("./bfbs/", bfbs_file)
+            #    mddb_path = os.path.join("./mddb/", mddb_file)
 
-            print("Running endless loop...")
+            #else:
+            #    # snap environment
+            #    bfbs_path = os.path.join(snap_path, bfbs_file)
+            #    mddb_path = os.path.join(snap_path, mddb_file)
+
+            provider_node_str = provide_string(provider, "string-value")
+
+            print("INFO Running endless loop...")
             while provider.is_connected():
                 time.sleep(1.0)  # Seconds
 
             print("ERROR Data Layer Provider is disconnected")
 
-            print("Stopping Data Layer Provider: ", end=" ")
+            provider_node_str.unregister_node()
+            del provider_node_str
+
+            print("Stopping Data Layer provider:", end=" ")
             result = provider.stop()
             print(result)
 
-            print("Unregister provider Node", value_address_str_1, end=" ")
-            result = provider.unregister_node(value_address_str_1)
-            print(result)
+        # Attention: Doesn't return if any provider or client instance is still running
+        stop_ok = datalayer_system.stop(False)
+        print("System Stop", stop_ok)
 
-            print("Unregister provider Node", value_address_str_2, end=" ")
-            result = provider.unregister_node(value_address_str_2)
-            print(result)
-            
-            print("Unregister provider Node", value_address_str_3, end=" ")
-            result = provider.unregister_node(value_address_str_3)
-            print(result)
-            
-            print("Unregister provider Node", value_address_str_4, end=" ")
-            result = provider.unregister_node(value_address_str_4)
-            print(result)
 
-            del provider_node_str_1
-            del provider_node_str_2
-            del provider_node_str_3
-            del provider_node_str_4
-
-        datalayer_system.stop(True)
-
-def provide_string(provider: ctrlxdatalayer.provider, name):
+def provide_string(provider: ctrlxdatalayer.provider, name: str):
     # Create and register simple string provider node
-    print("Creating string  provider node")
+    print("Creating string  provider node " + address_base + name)
     variantString = Variant()
     variantString.set_string("Enter SQL script here. Use ';' as the last character to suppress result")
     provider_node_str = SQLiteNode(
         provider, 
-        type_address_string, 
-        address_base + name,
+        type_address_string,
+        address_base + name, 
         name, 
         "-",
         "SQL-Terminal",
         variantString)
-    provider_node_str.register_node()
+    result = provider_node_str.register_node()
+    if result != ctrlxdatalayer.variant.Result.OK:
+        print("ERROR Registering node " + address_base +
+              name + " failed with:", result)
+
     return provider_node_str
 
 
