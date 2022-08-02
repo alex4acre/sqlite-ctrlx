@@ -1,5 +1,5 @@
 name: sqlite-ctrlx
-version: 2.0.00
+version: 2.0.01
 summary: Simple SQLite database
 description: |
   Writing a node will exectue the SQL statement on the SQLite database. Reading returns the result of the last succesful operation. 
@@ -24,6 +24,12 @@ parts:
     plugin: python
     source: .
 
+  configs:
+    source: ./configs
+    plugin: dump
+    organize:
+      'package-assets/*': package-assets/${SNAPCRAFT_PROJECT_NAME}/
+
   datalayerdeb:
     plugin: dump
     source: ./tmp/ctrlx-datalayer.deb
@@ -43,4 +49,8 @@ plugs:
     interface: content
     content: datalayer
     target: $SNAP_DATA/.datalayer
+  active-solution:
+    interface: content
+    content: solutions
+    target: $SNAP_COMMON/solutions
 

@@ -108,9 +108,9 @@ class SQLiteNode:
             return
 
         if 'SNAP' in os.environ:
-            conn = sqlite3.connect('test.db')   
+            conn = sqlite3.connect(os.environ('SNAP_COMMON') + '/solutions/activeConfiguration/SQLite/database.db')   
         else:
-            conn = sqlite3.connect('test.db')   
+            conn = sqlite3.connect(os.environ('SNAP_COMMON') + '/solutions/activeConfiguration/SQLite/database.db')   
         conn.execute("pragma journal_mode=wal;")
         
 
