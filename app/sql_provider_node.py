@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2021, Bosch Rexroth AG
+# Copyright (c) 2021-2022 Bosch Rexroth AG
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,27 +20,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import json
+import ctrlxdatalayer
+from ctrlxdatalayer.provider import Provider
+from ctrlxdatalayer.provider_node import ProviderNode, ProviderNodeCallbacks, NodeCallback
+from ctrlxdatalayer.variant import Result, Variant
+from comm.datalayer import NodeClass
+
+
 import os
 from sqlite3.dbapi2 import Connection
-import datalayer.clib
-import datalayer
-from datalayer.provider_node import ProviderNodeCallbacks, NodeCallback
-from datalayer.variant import Result, Variant, VariantType
-
 import sqlite3
 from sqlite3 import Error
-import flatbuffers
-from comm.datalayer import Metadata
-from comm.datalayer import AllowedOperations
-from comm.datalayer import Reference
-
-
-
 
 class SQLiteNode:
 
-    def __init__(self,provider : datalayer.provider, address : str , initialValue: Variant):
+    def __init__(self,
+                 provider: ctrlxdatalayer.provider,
+                 typeAddress: str,
+                 address: str,
+                 name: str,
+                 unit: str,
+                 description: str,
+                 initialValue: Variant):
 
         self.cbs = ProviderNodeCallbacks(
             self.__on_create,
@@ -51,146 +52,94 @@ class SQLiteNode:
             self.__on_metadata
         )
 
+        self.providerNode = ProviderNode(self.cbs)
+
         self.provider = provider
         self.address = address
         self.data = initialValue
-        self.metadata = Variant()
-
-
-        self.providerNode = datalayer.provider_node.ProviderNode(self.cbs)
+        self.metadata = self.create_metadata(typeAddress, name, unit, description)
 
     def register_node(self):
-      self.provider.register_node(self.address, self.providerNode)
+        return self.provider.register_node(self.address, self.providerNode)
 
-    def set_value(self,value: Variant):
+    def unregister_node(self):
+        self.provider.unregister_node(self.address)
+
+    def set_value(self, value: Variant):
         self.data = value
 
-    def __on_create(self, userdata: datalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
+    def create_metadata(self, typeAddress: str, name: str, unit: str, description: str):
+        return ctrlxdatalayer.metadata_utils.MetadataBuilder.create_metadata(
+            name, description, unit, description+"_url", NodeClass.NodeClass.Variable,
+            read_allowed=True, write_allowed=True, create_allowed=False, delete_allowed=False, browse_allowed=True,
+            type_path=typeAddress)    
+
+    def __on_create(self, userdata: ctrlxdatalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
         print("__on_create()", "address:", address, "userdata:", userdata)
         cb(Result.OK, data)
 
-    def __on_remove(self, userdata: datalayer.clib.userData_c_void_p, address: str, cb: NodeCallback):
+    def __on_remove(self, userdata: ctrlxdatalayer.clib.userData_c_void_p, address: str, cb: NodeCallback):
         print("__on_remove()", "address:", address, "userdata:", userdata)
         cb(Result.UNSUPPORTED, None)
 
-    def __on_browse(self, userdata: datalayer.clib.userData_c_void_p, address: str, cb: NodeCallback):
+    def __on_browse(self, userdata: ctrlxdatalayer.clib.userData_c_void_p, address: str, cb: NodeCallback):
         print("__on_browse()", "address:", address, "userdata:", userdata)
         new_data = Variant()
         new_data.set_array_string([])
         cb(Result.OK, new_data)
 
-    def __on_read(self, userdata: datalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
-        print("__on_read()", "address:", address, "data:", self.data, "userdata:", userdata)
+    def __on_read(self, userdata: ctrlxdatalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
+        #print("__on_read()", "address:", address,
+        #      "data:", self.data, "userdata:", userdata)
         new_data = self.data
         cb(Result.OK, new_data)
 
-    def __on_write(self, userdata: datalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
-        _data = data
-        print(data.get_string())
+    def __on_write(self, userdata: ctrlxdatalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
+        #print("__on_write()", "address:", address,
+        #      "data:", data, "userdata:", userdata)
+
+        if self.data.get_type() != data.get_type():
+            cb(Result.TYPE_MISMATCH, None)
+            return
+
         if 'SNAP' in os.environ:
-            #conn = sqlite3.connect('/var/snap/rexroth-solutions/common/solutions/activeConfiguration/test.db')
             conn = sqlite3.connect('test.db')   
         else:
             conn = sqlite3.connect('test.db')   
         conn.execute("pragma journal_mode=wal;")
-        #c = conn.cursor
+        
+
         try:
             completeScript = data.get_string()
             commandLength = len(completeScript)
             singleStatements = completeScript.split(";")
             #if the last character is ";" then we will run the entire thing as script
             if completeScript[-1] == ";":
-                #queryresult = str(conn.executescript(completeScript).fetchmany(2000))
                 queryresult = str(conn.executescript(completeScript).fetchall())
                 conn.commit()
             #if the last character is not ; then run as a script except the last statement which will return a result    
             else:    
                 singleStatements = completeScript.split(";")
                 conn.executescript(completeScript[:-len(singleStatements[-1])])
-                #for i in singleStatements:
                 conn.commit()
-                #queryresult = str(conn.execute(singleStatements[-1]).fetchmany(2000))
                 cur = conn.cursor()
-                #queryresult = str(cur.execute(singleStatements[-1]).fetchall())
                 rv = cur.execute(singleStatements[-1]).fetchall()
                 queryresult = str(rv)
-                #test stuff
-                
-                #this can be used to return json
-                #if cur.description is None:
-                #    queryresult = str(rv)
-                #else:    
-                #    row_headers=[x[0] for x in cur.description] #this will extract row headers
-                #    json_data=[]
-                #    for result in rv:
-                #        json_data.append(dict(zip(row_headers,result)))
-                #    queryresult = json.dumps(json_data)
                 conn.commit()
             print(queryresult)
-            _data.set_string(queryresult)
+            result, self.data = data.clone()
+            self.data.set_string(queryresult)
         except Error as e:  
             print(e)
-            _data.set_string("SQL error " + str(e))
+            result, self.data = data.clone()
+            self.data.set_string("SQL error " + str(e))
 
         if conn: 
             conn.close()
-        result, self.data = _data.clone()
+          
         cb(Result.OK, self.data)
 
-    def __on_metadata(self, userdata: datalayer.clib.userData_c_void_p, address: str, cb: NodeCallback):
-        print("__on_metadata()", "address:", address,"metadata:",self.metadata, "userdata:", userdata)
-        cb(Result.OK, self.metadata)
-
-class ConfigurationNode:
-
-    def __init__(self,provider : datalayer.provider, address : str , initialValue: Variant):
-
-        self.cbs = ProviderNodeCallbacks(
-            self.__on_create,
-            self.__on_remove,
-            self.__on_browse,
-            self.__on_read,
-            self.__on_write,
-            self.__on_metadata
-        )
-
-        self.provider = provider
-        self.address = address
-        self.data = initialValue
-        self.metadata = Variant()
-
-
-        self.providerNode = datalayer.provider_node.ProviderNode(self.cbs)
-
-    def register_node(self):
-      self.provider.register_node(self.address, self.providerNode)
-
-    def set_value(self,value: Variant):
-        self.data = value
-
-    def __on_create(self, userdata: datalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
-        print("__on_create()", "address:", address, "userdata:", userdata)
-        cb(Result.OK, data)
-
-    def __on_remove(self, userdata: datalayer.clib.userData_c_void_p, address: str, cb: NodeCallback):
-        print("__on_remove()", "address:", address, "userdata:", userdata)
-        cb(Result.UNSUPPORTED, None)
-
-    def __on_browse(self, userdata: datalayer.clib.userData_c_void_p, address: str, cb: NodeCallback):
-        print("__on_browse()", "address:", address, "userdata:", userdata)
-        new_data = Variant()
-        new_data.set_array_string([])
-        cb(Result.OK, new_data)
-
-    def __on_read(self, userdata: datalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
-        print("__on_read()", "address:", address, "data:", self.data, "userdata:", userdata)
-        new_data = self.data
-        cb(Result.OK, new_data)
-
-    def __on_write(self, userdata: datalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
-        result, self.data = data.clone()
-        cb(Result.OK, self.data)
-
-    def __on_metadata(self, userdata: datalayer.clib.userData_c_void_p, address: str, cb: NodeCallback):
-        print("__on_metadata()", "address:", address,"metadata:",self.metadata, "userdata:", userdata)
+    def __on_metadata(self, userdata: ctrlxdatalayer.clib.userData_c_void_p, address: str, cb: NodeCallback):
+        print("__on_metadata()", "address:", address,
+              "metadata:", self.metadata, "userdata:", userdata)
         cb(Result.OK, self.metadata)

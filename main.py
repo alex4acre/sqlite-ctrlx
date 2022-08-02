@@ -2,7 +2,7 @@
 
 # MIT License
 #
-# Copyright (c) 2021 Bosch Rexroth AG
+# Copyright (c) 2021-2022 Bosch Rexroth AG
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,95 +23,90 @@
 # SOFTWARE.
 
 import os
-from sqlite3.dbapi2 import Connection
+import sys
 import time
-import sqlite3
-from sqlite3 import Error
+from token import NUMBER
 
-import datalayer
-from datalayer.variant import Variant
+import ctrlxdatalayer
+from ctrlxdatalayer.variant import Variant, Result
 
-from app.sql_provider_node import SQLiteNode
+from helper.ctrlx_datalayer_helper import get_provider
 
-value_address_str_1 = "SQLite/terminal-1"
-value_address_str_2 = "SQLite/terminal-2"
-value_address_str_3 = "SQLite/terminal-3"
-value_address_str_4 = "SQLite/terminal-4"
+from app.my_provider_node import SQLiteNode
+
+NUMBER_OF_TERMINALS = 4 #define the number of terminals required. 
+
+# addresses of provided values
+address_base = "SQLite/"
+type_address_string = "types/datalayer/string"
 
 
 def main():
 
-    with datalayer.system.System("") as datalayer_system:
+    with ctrlxdatalayer.system.System("") as datalayer_system:
         datalayer_system.start(False)
 
-        # This is the connection string for TCP in the format: tcp://USER:PASSWORD@IP_ADDRESS:PORT
-        # Please check and change according your environment:
-        # - USER:       Enter your user name here - default is boschrexroth
-        # - PASSWORD:   Enter your password here - default is boschrexroth
-        # - IP_ADDRESS: 127.0.0.1   If you develop in WSL and you want to connect to a ctrlX CORE virtual with port forwarding
-        #               10.0.2.2    If you develop in a VM (Virtual Box, QEMU,...) and you want to connect to a ctrlX virtual with port forwarding
-        #               192.168.1.1 If you are using a ctrlX CORE or ctrlX CORE virtual with TAP adpater
+        # ip="10.0.2.2", ssl_port=8443: ctrlX virtual with port forwarding and default port mapping
+        provider, connection_string = get_provider(
+            datalayer_system, ip="10.0.2.2", ssl_port=8443)
+        if provider is None:
+            print("ERROR Connecting", connection_string, "failed.")
+            sys.exit(1)
 
-        #connectionProvider = "tcp://boschrexroth:boschrexroth@127.0.0.1:2070"
-        connectionProvider = "tcp://boschrexroth:boschrexroth@192.168.1.1:2070"
+        with provider:  # provider.close() is called automatically when leaving with... block
 
-        if 'SNAP' in os.environ:
-            connectionProvider = "ipc://"
-
-        print("Connecting", connectionProvider)
-        with datalayer_system.factory().create_provider(connectionProvider) as provider:
             result = provider.start()
-            if result is not datalayer.variant.Result.OK:
+            if result != Result.OK:
                 print("ERROR Starting Data Layer Provider failed with:", result)
                 return
 
-            provider_node_str_1 = provide_string(provider, value_address_str_1)
-            provider_node_str_2 = provide_string(provider, value_address_str_2)
-            provider_node_str_3 = provide_string(provider, value_address_str_3)
-            provider_node_str_4 = provide_string(provider, value_address_str_4)
+            # Path to compiled files
+            snap_path = os.getenv('SNAP')
+            provider_node = []
+            provider_node = [0 for i in range(NUMBER_OF_TERMINALS)]
 
-            print("Start provider")
-            provider.start()
-            print("Running endless loop...")
+            for i in range(NUMBER_OF_TERMINALS):
+                provider_node[i] = provide_string(provider, "Terminal_" + str(i))
+            
+            print("INFO Running endless loop...")
             while provider.is_connected():
                 time.sleep(1.0)  # Seconds
 
             print("ERROR Data Layer Provider is disconnected")
 
-            print("Stopping Data Layer Provider: ", end=" ")
+            for i in provider_node:
+                i.unregister_node()
+                del i
+            #provider_node_str.unregister_node()
+            #del provider_node_str
+
+            print("Stopping Data Layer provider:", end=" ")
             result = provider.stop()
             print(result)
 
-            print("Unregister provider Node", value_address_str_1, end=" ")
-            result = provider.unregister_node(value_address_str_1)
-            print(result)
+        # Attention: Doesn't return if any provider or client instance is still running
+        stop_ok = datalayer_system.stop(False)
+        print("System Stop", stop_ok)
 
-            print("Unregister provider Node", value_address_str_2, end=" ")
-            result = provider.unregister_node(value_address_str_2)
-            print(result)
-            
-            print("Unregister provider Node", value_address_str_3, end=" ")
-            result = provider.unregister_node(value_address_str_3)
-            print(result)
-            
-            print("Unregister provider Node", value_address_str_4, end=" ")
-            result = provider.unregister_node(value_address_str_4)
-            print(result)
 
-            del provider_node_str_1
-            del provider_node_str_2
-            del provider_node_str_3
-            del provider_node_str_4
-
-        datalayer_system.stop(True)
-
-def provide_string(provider: datalayer.provider, name):
+def provide_string(provider: ctrlxdatalayer.provider, name: str):
     # Create and register simple string provider node
-    print("Creating string  provider node")
+    print("Creating string  provider node " + address_base + name)
     variantString = Variant()
     variantString.set_string("Enter SQL script here. Use ';' as the last character to suppress result")
-    provider_node_str = SQLiteNode(provider, name, variantString)
-    provider_node_str.register_node()
+    provider_node_str = SQLiteNode(
+        provider, 
+        type_address_string,
+        address_base + name, 
+        name, 
+        "-",
+        "SQL-Terminal",
+        variantString)
+    result = provider_node_str.register_node()
+    if result != ctrlxdatalayer.variant.Result.OK:
+        print("ERROR Registering node " + address_base +
+              name + " failed with:", result)
+
     return provider_node_str
 
 
