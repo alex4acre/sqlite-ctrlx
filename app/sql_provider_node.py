@@ -34,11 +34,6 @@ from sqlite3 import Error
 
 class SQLiteNode:
 
-    #def __init__(self,
-    #             provider: Provider,
-    #             address: str,
-    #             initialValue: Variant):
-
     def __init__(self,
                  provider: ctrlxdatalayer.provider,
                  typeAddress: str,

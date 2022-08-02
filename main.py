@@ -25,6 +25,7 @@
 import os
 import sys
 import time
+from token import NUMBER
 
 import ctrlxdatalayer
 from ctrlxdatalayer.variant import Variant, Result
@@ -32,6 +33,8 @@ from ctrlxdatalayer.variant import Variant, Result
 from helper.ctrlx_datalayer_helper import get_provider
 
 from app.my_provider_node import SQLiteNode
+
+NUMBER_OF_TERMINALS = 4 #define the number of terminals required. 
 
 # addresses of provided values
 address_base = "SQLite/"
@@ -59,26 +62,23 @@ def main():
 
             # Path to compiled files
             snap_path = os.getenv('SNAP')
-            #if snap_path is None:
-            #    # Debug environment
-            #    bfbs_path = os.path.join("./bfbs/", bfbs_file)
-            #    mddb_path = os.path.join("./mddb/", mddb_file)
+            provider_node = []
+            provider_node = [0 for i in range(NUMBER_OF_TERMINALS)]
 
-            #else:
-            #    # snap environment
-            #    bfbs_path = os.path.join(snap_path, bfbs_file)
-            #    mddb_path = os.path.join(snap_path, mddb_file)
-
-            provider_node_str = provide_string(provider, "string-value")
-
+            for i in range(NUMBER_OF_TERMINALS):
+                provider_node[i] = provide_string(provider, "Terminal_" + str(i))
+            
             print("INFO Running endless loop...")
             while provider.is_connected():
                 time.sleep(1.0)  # Seconds
 
             print("ERROR Data Layer Provider is disconnected")
 
-            provider_node_str.unregister_node()
-            del provider_node_str
+            for i in provider_node:
+                i.unregister_node()
+                del i
+            #provider_node_str.unregister_node()
+            #del provider_node_str
 
             print("Stopping Data Layer provider:", end=" ")
             result = provider.stop()
