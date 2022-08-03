@@ -32,8 +32,7 @@ from ctrlxdatalayer.variant import Variant, Result
 
 from helper.ctrlx_datalayer_helper import get_provider
 
-from app.my_provider_node import SQLiteNode
-from app.app_data_control import AppDataControl
+from app.sql_provider_node import SQLiteNode
 
 NUMBER_OF_TERMINALS = 4 #define the number of terminals required. 
 
@@ -43,7 +42,8 @@ type_address_string = "types/datalayer/string"
 
 
 def main():
-    print 
+    
+    
     with ctrlxdatalayer.system.System("") as datalayer_system:
         datalayer_system.start(False)
 
@@ -56,8 +56,9 @@ def main():
 
         #if not os.path.exists("/var/snap/rexroth-solutions/common/solutions/activeConfiguration/SQLite"):
         #    os.mkdir("/var/snap/rexroth-solutions/common/solutions/activeConfiguration/SQLite")
-        if not os.path.exists(os.environ('SNAP_COMMON') + "/solutions/activeConfiguration/SQLite"):
-            os.mkdir(os.environ('SNAP_COMMON') + "/solutions/activeConfiguration/SQLite")
+        common_path = os.getenv("SNAP_COMMON")
+        if not os.path.exists(common_path + "/solutions/activeConfiguration/SQLite"):
+            os.mkdir(common_path + "/solutions/activeConfiguration/SQLite")
 
         with provider:  # provider.close() is called automatically when leaving with... block
 
@@ -74,8 +75,6 @@ def main():
             for i in range(NUMBER_OF_TERMINALS):
                 provider_node[i] = provide_string(provider, "Terminal_" + str(i))
             
-            #config = AppDataControl()
-
             print("INFO Running endless loop...")
             while provider.is_connected():
                 time.sleep(1.0)  # Seconds
@@ -85,8 +84,6 @@ def main():
             for i in provider_node:
                 i.unregister_node()
                 del i
-            #provider_node_str.unregister_node()
-            #del provider_node_str
 
             print("Stopping Data Layer provider:", end=" ")
             result = provider.stop()
