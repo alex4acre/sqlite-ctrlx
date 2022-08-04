@@ -89,53 +89,57 @@ class SQLiteNode:
         cb(Result.OK, new_data)
 
     def __on_read(self, userdata: ctrlxdatalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
-        #print("__on_read()", "address:", address,
-        #      "data:", self.data, "userdata:", userdata)
         new_data = self.data
         cb(Result.OK, new_data)
 
     def __on_write(self, userdata: ctrlxdatalayer.clib.userData_c_void_p, address: str, data: Variant, cb: NodeCallback):
-        #print("__on_write()", "address:", address,
-        #      "data:", data, "userdata:", userdata)
-
         if self.data.get_type() != data.get_type():
             cb(Result.TYPE_MISMATCH, None)
             return
-
-        if 'SNAP' in os.environ:
-            conn = sqlite3.connect('test.db')   
-        else:
-            conn = sqlite3.connect('test.db')   
-        conn.execute("pragma journal_mode=wal;")
         
+        #if 'SNAP' in os.environ:
+        #    conn = sqlite3.connect(os.getenv("SNAP_COMMON") + '/solutions/activeConfiguration/SQLite/database.db')   
+        #else:
+            #conn = sqlite3.connect(os.getenv("SNAP_COMMON") + '/solutions/activeConfiguration/SQLite/database.db')
+        if data.get_string() == "DELETE ALL":
+            if os.path.exists(os.getenv("SNAP_COMMON") + "/solutions/activeConfiguration/SQLite/database.db"):
+                os.remove(os.getenv("SNAP_COMMON") + "/solutions/activeConfiguration/SQLite/database.db")
+            if os.path.exists(os.getenv("SNAP_COMMON") + "/solutions/activeConfiguration/SQLite/test.db"):    
+                os.remove(os.getenv("SNAP_COMMON") + "/solutions/activeConfiguration/SQLite/test.db")
+            result, self.data = data.clone()
+            self.data.set_string("All data deleted")
+        else:    
+            conn = sqlite3.connect(os.getenv("SNAP_COMMON") + '/solutions/activeConfiguration/SQLite/database.db')   
+            conn.execute("pragma journal_mode=wal;")
+            
 
-        try:
-            completeScript = data.get_string()
-            commandLength = len(completeScript)
-            singleStatements = completeScript.split(";")
-            #if the last character is ";" then we will run the entire thing as script
-            if completeScript[-1] == ";":
-                queryresult = str(conn.executescript(completeScript).fetchall())
-                conn.commit()
-            #if the last character is not ; then run as a script except the last statement which will return a result    
-            else:    
+            try:
+                completeScript = data.get_string()
+                commandLength = len(completeScript)
                 singleStatements = completeScript.split(";")
-                conn.executescript(completeScript[:-len(singleStatements[-1])])
-                conn.commit()
-                cur = conn.cursor()
-                rv = cur.execute(singleStatements[-1]).fetchall()
-                queryresult = str(rv)
-                conn.commit()
-            print(queryresult)
-            result, self.data = data.clone()
-            self.data.set_string(queryresult)
-        except Error as e:  
-            print(e)
-            result, self.data = data.clone()
-            self.data.set_string("SQL error " + str(e))
+                #if the last character is ";" then we will run the entire thing as script
+                if completeScript[-1] == ";":
+                    queryresult = str(conn.executescript(completeScript).fetchall())
+                    conn.commit()
+                #if the last character is not ; then run as a script except the last statement which will return a result    
+                else:    
+                    singleStatements = completeScript.split(";")
+                    conn.executescript(completeScript[:-len(singleStatements[-1])])
+                    conn.commit()
+                    cur = conn.cursor()
+                    rv = cur.execute(singleStatements[-1]).fetchall()
+                    queryresult = str(rv)
+                    conn.commit()
+                print(queryresult)
+                result, self.data = data.clone()
+                self.data.set_string(queryresult)
+            except Error as e:  
+                print(e)
+                result, self.data = data.clone()
+                self.data.set_string("SQL error " + str(e))
 
-        if conn: 
-            conn.close()
+            if conn: 
+                conn.close()
           
         cb(Result.OK, self.data)
 

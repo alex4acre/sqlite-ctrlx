@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json-schema.boschrexroth.com/ctrlx-automation/ctrlx-core/apps/package-manifest/package-manifest.v1.schema.json",
+    "version": "2.0.01",
+    "id": "sdk-py-appdata",
+    "configuration": {
+      "appDirectories": [
+        {
+          "name": "AppDataSamplePy",
+          "description": "Python AppData Sample",
+          "icon": "bosch-ic-directory",
+           "scopes": [ 
+          ],
+          "copyOnLoad": true         
+        }
+      ]
+    }
+}
