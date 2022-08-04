@@ -7,6 +7,15 @@ This python app __sqlite-ctrlx__ provides datalayer nodes on a bosch rexroth ctr
 Enter SQL commmands into the terminals provided on the ctlrX core datalayer at SQLite/teminal-x. Use a semicolon between commands to run multiple commands. 
 The last command will return a result if reqested and not followed by a semicolon (a semicolon will suppress responses from the database).
 
+Commands can be given with the PUT REST Command. An example is shown here requesting data form the table. The response is below.
+
+![image](https://user-images.githubusercontent.com/89591244/182952036-0b13fcbc-ab4e-4367-8544-b60706b5c9ae.png)
+
+
+The database flies is stored in the app data of the ctrlX and can be downloaded or archived through the ctrlX utilites. 
+
+![image](https://user-images.githubusercontent.com/89591244/182950447-2146e82b-c539-4843-b8c0-f3a72ab69b7d.png)
+
 ## License
 
 MIT License
