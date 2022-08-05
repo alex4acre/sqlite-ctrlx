@@ -34,11 +34,13 @@ The last command will return a result if reqested and not followed by a semicolo
 
 
 
-### The database flies is stored in the app data of the ctrlX and can be downloaded or archived through the ctrlX utilites. 
+### The database flies is stored in the app data of the ctrlX.
+  These files can be downloaded or archived through the ctrlX utilites. 
 
 ![image](https://user-images.githubusercontent.com/89591244/182950447-2146e82b-c539-4843-b8c0-f3a72ab69b7d.png)
 
-
+### All database data may be erased by entering "DELETE ALL" into any terminal.
+  This process is irrevocable.
 
 ## License
 
