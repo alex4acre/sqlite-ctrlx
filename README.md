@@ -4,7 +4,7 @@ This python app __sqlite-ctrlx__ provides datalayer nodes on a bosch rexroth ctr
 
 ## Usage
 
-Enter SQL commmands into the terminals provided on the ctlrX core datalayer. Use a semicolon between commands to run multiple commands. The last command will return a result if reqested and not followed by a semicolon (a semicolon will suppress responses from the database).
+Enter SQL commmands into the terminals provided on the ctlrX core datalayer. Use a semicolon between commands to run multiple commands. The last command will return a result if requested and not followed by a semicolon (a semicolon will suppress responses from the database).
 
 
 ### Commands are given with an HTTP PUT request. The response contains the resulte of the query.
