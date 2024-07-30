@@ -56,7 +56,7 @@ Enter SQL commmands into the terminals provided on the ctlrX core datalayer. Use
 ```json
   {
     "type": "string",
-    "value": "[('Jim', 34), ('Mark', 42), ('Chris', 51), ('Jim', 34), ('Mark', 42), ('Chris', 51)]"
+    "value": "[('Jim', 34), ('Mark', 42), ('Chris', 51)]"
   }
 ```
 
@@ -73,7 +73,7 @@ Enter SQL commmands into the terminals provided on the ctlrX core datalayer. Use
 ```json
   {
     "type": "string",
-    "value": "[('Mark',), ('Chris',), ('Mark',), ('Chris',)]"
+    "value": "[('Mark',), ('Chris',)]"
   }
 ```
 
