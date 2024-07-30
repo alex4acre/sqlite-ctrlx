@@ -1,8 +1,6 @@
-02:21:59:410, __main__, INFO, cltrX File Path: None
-02:21:59:410, __main__, INFO, Config modified at UNIX TIME 1722304061.3545394
-02:21:59:410, __main__, INFO, Config data: {'LOG LEVEL': 'DEBUG', 'LOG PERSIST': False, 'database path': 'database.db', 'terminals': ['RestInterface', 'PLC']}
-02:21:59:410, __main__, INFO, Creating string  provider node SQLite/RestInterface
-02:21:59:412, __main__, INFO, Creating string  provider node SQLite/Terminal_0
-02:21:59:412, __main__, INFO, Creating string  provider node SQLite/PLC
-02:21:59:412, __main__, INFO, Creating string  provider node SQLite/Terminal_1
-02:21:59:413, __main__, INFO, INFO Running endless loop...
+13:34:44:981, __main__, INFO, cltrX File Path: None
+13:34:44:981, __main__, INFO, Config modified at UNIX TIME 1722304061.3545394
+13:34:44:982, __main__, INFO, Config data: {'LOG LEVEL': 'DEBUG', 'LOG PERSIST': False, 'database path': 'database.db', 'terminals': ['RestInterface', 'PLC']}
+13:34:44:982, __main__, INFO, Creating string  provider node SQLite/RestInterface
+13:34:44:984, __main__, INFO, Creating string  provider node SQLite/PLC
+13:34:44:986, __main__, INFO, INFO Running endless loop...

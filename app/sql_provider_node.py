@@ -104,12 +104,12 @@ class SQLiteNode:
             conn = sqlite3.connect(os.getenv("SNAP_COMMON") + '/solutions/activeConfiguration/SQLite/' + self.databasePath)   
         else:
             conn = sqlite3.connect("./DEV/" + self.databasePath)   
+        #Setup the database to use Write-Ahead Logging    
         conn.execute("pragma journal_mode=wal;")
-        
 
         try:
+            #Begin the new read/write operation
             completeScript = data.get_string()
-            commandLength = len(completeScript)
             singleStatements = completeScript.split(";")
             #if the last character is ";" then we will run the entire thing as script
             if completeScript[-1] == ";":
@@ -124,15 +124,18 @@ class SQLiteNode:
                 rv = cur.execute(singleStatements[-1]).fetchall()
                 queryresult = str(rv)
                 conn.commit()
-            print(queryresult)
+
             result, self.data = data.clone()
+            #Return the query result
             self.data.set_string(queryresult)
         except Error as e:  
+            #Return the fault code
             print(e)
             result, self.data = data.clone()
             self.data.set_string("SQL error " + str(e))
-
-        if conn: 
+            
+        if conn:
+            #Close any remaining connection to the database 
             conn.close()
         
         cb(Result.OK, self.data)

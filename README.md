@@ -4,43 +4,88 @@ This python app __sqlite-ctrlx__ provides datalayer nodes on a bosch rexroth ctr
 
 ## Usage
 
-Enter SQL commmands into the terminals provided on the ctlrX core datalayer at SQLite/teminal-x. Use a semicolon between commands to run multiple commands. 
-The last command will return a result if reqested and not followed by a semicolon (a semicolon will suppress responses from the database).
+Enter SQL commmands into the terminals provided on the ctlrX core datalayer. Use a semicolon between commands to run multiple commands. The last command will return a result if reqested and not followed by a semicolon (a semicolon will suppress responses from the database).
 
 
-### Commands can be given with the PUT REST Command. An example is shown here.
+### Commands are given with an HTTP PUT request. The response contains the resulte of the query.
 
-#### Here a table is created and the response is empty.
+#### A put request with the following json creates a table called customer with name and age columns. The response is empty.
 
-![image](https://user-images.githubusercontent.com/89591244/183098877-95282298-6fdb-478c-9d32-fe16f0ba7b78.png)
+##### Request:
+```json
+  {
+    "type": "string",
+    "value": "create table customers (name varchar(255), age int)"
+  }
+```
 
-
+##### Response:
+```json
+  {
+    "type": "string",
+    "value": "[]"
+  }
+```
 
 #### Here, a series of commands are issued with a semi-colon between each command.
+##### Request: 
+```json
+  {
+    "type": "string",
+    "value": "insert into customers VALUES ('Jim', '34'); insert into customers VALUES ('Mark', '42'); insert into customers VALUES ('Chris', '51');"
+  }
+ ``` 
 
-![image](https://user-images.githubusercontent.com/89591244/183099242-34b6cc5a-9628-42e5-8b51-7e41d4f85c35.png)
-
-
+##### Response:
+```json
+  {
+    "type": "string",
+    "value": "[]"
+  }
+```
 
 #### Here, a set of data is pulled and the response shows the requested data.
-
-![image](https://user-images.githubusercontent.com/89591244/183099326-3b06c7f7-9108-439d-bd87-60321c1bcaeb.png)
-
-
+##### Request: 
+```json
+ {
+    "type": "string",
+    "value": "select * from customers"
+  }
+```
+##### Response:
+```json
+  {
+    "type": "string",
+    "value": "[('Jim', 34), ('Mark', 42), ('Chris', 51), ('Jim', 34), ('Mark', 42), ('Chris', 51)]"
+  }
+```
 
 #### Here, more specific data is pulled form the table. 
 
-![image](https://user-images.githubusercontent.com/89591244/183099430-86ee8857-babb-4ae8-acac-9be2e75c2d49.png)
+##### Request: 
+```json
+  {
+    "type": "string",
+    "value": "select name from customers where age > 40"
+  }
+```
+##### Response:
+```json
+  {
+    "type": "string",
+    "value": "[('Mark',), ('Chris',), ('Mark',), ('Chris',)]"
+  }
+```
 
-
-
-### The database flies is stored in the app data of the ctrlX.
+### The database flies along with a log and configuration file is stored in the app data of the ctrlX. 
   These files can be downloaded or archived through the ctrlX utilites. 
 
-![image](https://user-images.githubusercontent.com/89591244/182950447-2146e82b-c539-4843-b8c0-f3a72ab69b7d.png)
+![alt text](image.png)
 
-### All database data may be erased by entering "DELETE ALL" into any terminal.
-  This process is irrevocable.
+
+  The configuration file can be used to change the logging level of the log file (ERROR, WARNING, INFO, DEBUG), set the persistence of the log through power cycle, specify the database path relative to the config file, and configure the SQLite node names as they appear on the datalayer.
+
+![alt text](image-1.png)
 
 ## License
 
