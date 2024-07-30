@@ -31,7 +31,7 @@
     "appDirectories": [
       {
         "name": "SQLite",
-        "description": "Simple python powered SQLite Database",
+        "description": "SQLite Database: Configuration, Logs, Database files",
         "icon": "bosch-ic-core-data",
         "copyOnLoad": false,
         "writeProtected" : false

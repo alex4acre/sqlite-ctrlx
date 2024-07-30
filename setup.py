@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
       name="sqlite-ctrlx",
-      version="2.0.04",
+      version="2.0.05",
       description="Simple python powered SQLite database",
       author="A. Fouraker", 
       install_requires = ['ctrlx-datalayer'],   
