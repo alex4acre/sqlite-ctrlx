@@ -41,7 +41,8 @@ class SQLiteNode:
                  name: str,
                  unit: str,
                  description: str,
-                 initialValue: Variant):
+                 initialValue: Variant, 
+                 databasePath: str):
 
         self.cbs = ProviderNodeCallbacks(
             self.__on_create,
@@ -58,6 +59,7 @@ class SQLiteNode:
         self.address = address
         self.data = initialValue
         self.metadata = self.create_metadata(typeAddress, name, unit, description)
+        self.databasePath = databasePath
 
     def register_node(self):
         return self.provider.register_node(self.address, self.providerNode)
@@ -97,50 +99,42 @@ class SQLiteNode:
             cb(Result.TYPE_MISMATCH, None)
             return
         
-        #if 'SNAP' in os.environ:
-        #    conn = sqlite3.connect(os.getenv("SNAP_COMMON") + '/solutions/activeConfiguration/SQLite/database.db')   
-        #else:
-            #conn = sqlite3.connect(os.getenv("SNAP_COMMON") + '/solutions/activeConfiguration/SQLite/database.db')
-        if data.get_string() == "DELETE ALL":
-            if os.path.exists(os.getenv("SNAP_COMMON") + "/solutions/activeConfiguration/SQLite/database.db"):
-                os.remove(os.getenv("SNAP_COMMON") + "/solutions/activeConfiguration/SQLite/database.db")
-            if os.path.exists(os.getenv("SNAP_COMMON") + "/solutions/activeConfiguration/SQLite/test.db"):    
-                os.remove(os.getenv("SNAP_COMMON") + "/solutions/activeConfiguration/SQLite/test.db")
-            result, self.data = data.clone()
-            self.data.set_string("All data deleted")
-        else:    
-            conn = sqlite3.connect(os.getenv("SNAP_COMMON") + '/solutions/activeConfiguration/SQLite/database.db')   
-            conn.execute("pragma journal_mode=wal;")
-            
+        #Provide the utilty to delete the database if "DELETE All" 
+        if 'SNAP' in os.environ:
+            conn = sqlite3.connect(os.getenv("SNAP_COMMON") + '/solutions/activeConfiguration/SQLite/' + self.databasePath)   
+        else:
+            conn = sqlite3.connect("./DEV/" + self.databasePath)   
+        conn.execute("pragma journal_mode=wal;")
+        
 
-            try:
-                completeScript = data.get_string()
-                commandLength = len(completeScript)
+        try:
+            completeScript = data.get_string()
+            commandLength = len(completeScript)
+            singleStatements = completeScript.split(";")
+            #if the last character is ";" then we will run the entire thing as script
+            if completeScript[-1] == ";":
+                queryresult = str(conn.executescript(completeScript).fetchall())
+                conn.commit()
+            #if the last character is not ; then run as a script except the last statement which will return a result    
+            else:    
                 singleStatements = completeScript.split(";")
-                #if the last character is ";" then we will run the entire thing as script
-                if completeScript[-1] == ";":
-                    queryresult = str(conn.executescript(completeScript).fetchall())
-                    conn.commit()
-                #if the last character is not ; then run as a script except the last statement which will return a result    
-                else:    
-                    singleStatements = completeScript.split(";")
-                    conn.executescript(completeScript[:-len(singleStatements[-1])])
-                    conn.commit()
-                    cur = conn.cursor()
-                    rv = cur.execute(singleStatements[-1]).fetchall()
-                    queryresult = str(rv)
-                    conn.commit()
-                print(queryresult)
-                result, self.data = data.clone()
-                self.data.set_string(queryresult)
-            except Error as e:  
-                print(e)
-                result, self.data = data.clone()
-                self.data.set_string("SQL error " + str(e))
+                conn.executescript(completeScript[:-len(singleStatements[-1])])
+                conn.commit()
+                cur = conn.cursor()
+                rv = cur.execute(singleStatements[-1]).fetchall()
+                queryresult = str(rv)
+                conn.commit()
+            print(queryresult)
+            result, self.data = data.clone()
+            self.data.set_string(queryresult)
+        except Error as e:  
+            print(e)
+            result, self.data = data.clone()
+            self.data.set_string("SQL error " + str(e))
 
-            if conn: 
-                conn.close()
-          
+        if conn: 
+            conn.close()
+        
         cb(Result.OK, self.data)
 
     def __on_metadata(self, userdata: ctrlxdatalayer.clib.userData_c_void_p, address: str, cb: NodeCallback):
